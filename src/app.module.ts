@@ -7,6 +7,7 @@ import { LikeModule } from './like/like.module';
 import { Neo4jModule } from './neo4j/neo4j.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Neo4jConfig } from './neo4j-config.interface';
+import { TransformInterceptor } from './utils/transform.interceptor';
 
 @Module({
   imports: [StudyModule, CommentModule, LikeModule, 
@@ -24,6 +25,6 @@ import { Neo4jConfig } from './neo4j-config.interface';
       })
     }),],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, TransformInterceptor],
 })
 export class AppModule {}
