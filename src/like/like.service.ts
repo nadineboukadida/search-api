@@ -17,7 +17,7 @@ export class LikeService {
     if (!res.records.length) {
       return undefined;
     }
-    const like = res.records;
+    return res.records.map((element) => new Like(element.get('l')?.properties));
   }
 
   async getLikesByCommentId({ commentId }: GetCommentDto) {
@@ -31,7 +31,7 @@ export class LikeService {
             `,
       { commentId },
     );
-    return res.records;
+    return this.hydrate(res);
   }
 
   async likeComment(likeCommentDto: LikeCommentDto): Promise<any> {
@@ -82,11 +82,11 @@ export class LikeService {
     }
     const res = await this.neo4jService.read(
       `
-            MATCH (l:Like)-[r:ASSIGNED_TO]->(s:study{id : $studyId}) RETURN l
+            MATCH (l:Like)-[r:ASSIGNED_TO]->(s:Study{id : $studyId}) RETURN l
             `,
       { studyId },
     );
-    return res.records;
+    return this.hydrate(res);
   }
 
   async likestudy(likestudyDto: LikeStudyDto): Promise<any> {
@@ -98,7 +98,7 @@ export class LikeService {
     }
     const liked = await this.neo4jService.write(
       `
-            MATCH (l:Like {hcpId: $hcpId})-[r:ASSIGNED_TO]->(s:study{id : $studyId}) RETURN l
+            MATCH (l:Like {hcpId: $hcpId})-[r:ASSIGNED_TO]->(s:Study{id : $studyId}) RETURN l
         `,
       {
         studyId,
@@ -110,7 +110,7 @@ export class LikeService {
     if (liked.records[0]) {
       var res = await this.neo4jService.write(
         `
-                MATCH (l:Like {hcpId: $hcpId})-[r:ASSIGNED_TO]->(c:study{id : $studyId})
+                MATCH (l:Like {hcpId: $hcpId})-[r:ASSIGNED_TO]->(c:Study{id : $studyId})
                 DETACH DELETE l
             `,
         { studyId, fullName, hcpId },
@@ -120,9 +120,9 @@ export class LikeService {
         `
           CREATE (l:Like) SET l += $properties, l.id = randomUUID()
           WITH l
-          MATCH (s:study) WHERE s.id = $studyId
+          MATCH (s:Study) WHERE s.id = $studyId
           CREATE (l)-[r:ASSIGNED_TO]->(s)
-          RETURN (s)
+          RETURN (l)
       `,
         { properties: { hcpId }, studyId, fullName },
       );

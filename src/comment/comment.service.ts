@@ -20,6 +20,12 @@ export class CommentService {
     const comment = res.records[0].get('c');
     return new Comment(comment);
   }
+  hydrate_mass(res):Comment[] {
+    if (!res.records.length) {
+      return undefined;
+    }
+    return res.records.map((element) => new Comment(element.get('c')?.properties));
+  }
 
   async getStudy(studyId) {
     const res = await this.neo4jService.read(
@@ -98,7 +104,7 @@ export class CommentService {
         `,
       { studyId },
     );
-    return res.records;
+    return this.hydrate_mass(res);
   }
 
   async deleteCommentById({ commentId , hcpId}: DeleteCommentDto) {

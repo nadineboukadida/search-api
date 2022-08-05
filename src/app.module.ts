@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { StudyModule } from './study/study.module';
 import { CommentModule } from './comment/comment.module';
 import { LikeModule } from './like/like.module';
 import { Neo4jModule } from './neo4j/neo4j.module';
@@ -11,7 +10,7 @@ import { TransformInterceptor } from './utils/transform.interceptor';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [StudyModule, CommentModule, LikeModule, 
+  imports: [ CommentModule, LikeModule, 
     ConfigModule.forRoot({ isGlobal: true }),
     Neo4jModule.forRootAsync({
       imports: [ ConfigModule, ],
