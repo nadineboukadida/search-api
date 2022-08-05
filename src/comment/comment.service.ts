@@ -1,49 +1,67 @@
+import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Transaction, types } from 'neo4j-driver';
 import { Neo4jService } from 'src/neo4j/neo4j.service';
 import { Comment } from './comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { DeleteCommentDto } from './dto/delete-comment.dto';
-import { LikeCommentDto } from './dto/like-comment.dto';
+import { LikeCommentDto } from '../like/dto/like-comment.dto';
 import { SearchCommentDto } from './dto/search_comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentService {
-  constructor(private readonly neo4jService: Neo4jService) {}
+  constructor(private readonly neo4jService: Neo4jService,private readonly httpService: HttpService) {}
 
-  private hydrate(res): Comment {
+  hydrate(res): Comment {
     if (!res.records.length) {
       return undefined;
     }
     const comment = res.records[0].get('c');
     return new Comment(comment);
   }
-  private async getStudy(studyId) {
-   const res = await this.neo4jService.read(
-        `
+
+  async getStudy(studyId) {
+    const res = await this.neo4jService.read(
+      `
           MATCH (s:Study)
           WHERE s.id = $studyId
           RETURN s
           `,
-        { studyId },
-      );
-      return res;
+      { studyId },
+    );
+    return res;
   }
-  private async getComment(commentId) {
+
+  async getComment(commentId) {
     const res = await this.neo4jService.read(
-         `
+      `
            MATCH (c:Comment)
            WHERE c.id = $commentId
            RETURN c
            `,
-         { commentId },
-       );
-       return res;
-   }
+      { commentId },
+    );
+    return res;
+  } 
+
+  async hcpCommentOwner(hcpId, commentId) {
+    const res = await this.neo4jService.read(
+      `
+           MATCH (c:Comment)
+           WHERE c.hcpId = $hcpId AND c.id = $commentId
+           RETURN c
+           `,
+      { hcpId, commentId },
+    );
+    return res;
+  }
+
 
   async createComment(
-    databaseOrTransaction: string | Transaction, commentDto: CreateCommentDto): Promise<Comment> {
+    databaseOrTransaction: string | Transaction,
+    commentDto: CreateCommentDto,
+  ): Promise<Comment> {
     const { studyId, hcpId, content } = commentDto;
     const study = await this.getStudy(studyId);
     if (!study.records[0]) {
@@ -61,14 +79,19 @@ export class CommentService {
       {
         properties: {
           content,
+          hcpId
         },
       },
       databaseOrTransaction,
     );
-    return this.hydrate(res)
+    return this.hydrate(res);
   }
 
   async getCommentByStudyId({ studyId }: SearchCommentDto): Promise<any> {
+    const study = await this.getStudy(studyId);
+    if (!study.records[0]) {
+      throw new BadRequestException('this study ID does not exist');
+    }
     const res = await this.neo4jService.read(
       `
         MATCH (c:Comment)-[r:COMMENT_TO]->(s:Study{id : $studyId}) RETURN c
@@ -78,53 +101,45 @@ export class CommentService {
     return res.records;
   }
 
-  async deleteCommentById({commentId}: DeleteCommentDto) {
+  async deleteCommentById({ commentId , hcpId}: DeleteCommentDto) {
     const comment = await this.getComment(commentId);
     if (!comment.records[0]) {
-        throw new BadRequestException('this comment does not exist');
-      }
-    return await this.neo4jService.write(`
+      throw new BadRequestException('this comment does not exist');
+    }
+    const commentOwned =await this.hcpCommentOwner(hcpId,commentId)
+    if(commentOwned.records[0]){
+      throw new BadRequestException('this comment is not yours');
+    }
+    return await this.neo4jService.write(
+      `
         MATCH (c:Comment)
         WHERE c.id = $commentId
         DETACH DELETE c
-    `, { commentId })
-        
-}
+    `,
+      { commentId },
+    );
+  }
 
-async updateComment({commentId,newContent}: UpdateCommentDto) {
+  async updateComment({ commentId, newContent,hcpId }: UpdateCommentDto) {
     const comment = await this.getComment(commentId);
     if (!comment.records[0]) {
-        throw new BadRequestException('this comment does not exist');
-      }
-      const res = await this.neo4jService.write(`
+      throw new BadRequestException('this comment does not exist');
+    }
+    const commentOwned =await this.hcpCommentOwner(hcpId,commentId)
+    if(commentOwned.records[0]){
+      throw new BadRequestException('this comment is not yours');
+    }
+    const res = await this.neo4jService.write(
+      `
         MATCH (c:Comment)
         WHERE c.id = $commentId
         SET c.content = $newContent
         RETURN c
-    `, { commentId , newContent})
-    return this.hydrate(res)
-}
-async likeComment(likeCommentDto: LikeCommentDto): Promise<Comment> {
-  const { commentId, hcpId} = likeCommentDto;
-  const comment = await this.getComment(commentId);
-  if (!comment.records[0]) {
-    throw new BadRequestException('this comment ID does not exist');
+    `,
+      { commentId, newContent },
+    );
+    return this.hydrate(res);
   }
 
-  const res = await this.neo4jService.write(
-    `
-      CREATE (l:Like) SET l += $properties, l.id = randomUUID()
-      WITH l
-      MATCH (c:Comment) WHERE c.id = $commentId"
-      CREATE (l)-[r:ASSIGNED_TO]->(c)
-      RETURN (c);
-  `,
-    {
-      properties: {
-        commentId,
-      },
-    });
-  return this.hydrate(res)
-}
 
 }

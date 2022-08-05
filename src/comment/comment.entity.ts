@@ -1,17 +1,19 @@
-import { Node } from "neo4j-driver"
+import { Node } from 'neo4j-driver';
 
 export class Comment {
-    constructor(private readonly node: Node) {}
+  constructor(private readonly node: Node) {}
 
-    getId(): string {
-        return (<Record<string, any>> this.node.properties).id
-    }
-    getContent(): string {
-        return (<Record<string, any>> this.node.properties).id
-    }
+  getId(): string {
+    return (<Record<string, any>>this.node.properties).id;
+  }
+  getContent(): string {
+    return (<Record<string, any>>this.node.properties).content;
+  }
 
-    toJson(): Record<string, any> {
-        const { id, studyId, hcpId, content,date } = <Record<string, any>> this.node.properties
-        return { id, studyId, hcpId, content,date }
-    }
+  toJson(): Record<string, any> {
+    const { id, content, date, hcpId } = <Record<string, any>>(
+      this.node.properties
+    );
+    return { id, content, date, hcpId };
+  }
 }

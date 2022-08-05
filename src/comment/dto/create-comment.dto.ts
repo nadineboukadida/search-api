@@ -12,4 +12,10 @@ export class CreateCommentDto {
 export class GetCommentDto {
     @IsString()
     commentId: string;
+    fullName?:string;
+}
+export class GetStudyDto {
+    @IsString()
+    studyId: string;
+    fullName?:string;
 }
