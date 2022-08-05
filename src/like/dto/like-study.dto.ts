@@ -4,3 +4,6 @@ export class LikeStudyDto {
     token?:string;
     fullName?:string;
 }
+export class getLikedByIdDto {
+    hcpId:string
+}

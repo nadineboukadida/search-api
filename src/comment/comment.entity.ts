@@ -11,9 +11,9 @@ export class Comment {
   }
 
   toJson(): Record<string, any> {
-    const { id, content, date, hcpId ,fullName} = <Record<string, any>>(
+    const { id, content, date, hcpId ,fullName, number} = <Record<string, any>>(
       this.node.properties
     );
-    return { id, content, date, hcpId ,fullName};
+    return { id, content, date, hcpId ,fullName,number};
   }
 }

@@ -3,7 +3,7 @@ import { CommentService } from 'src/comment/comment.service';
 import { GetCommentDto, GetStudyDto } from 'src/comment/dto/create-comment.dto';
 import { LikeCommentDto } from 'src/like/dto/like-comment.dto';
 import { Neo4jService } from 'src/neo4j/neo4j.service';
-import { LikeStudyDto } from './dto/like-study.dto';
+import { getLikedByIdDto, LikeStudyDto } from './dto/like-study.dto';
 import { Like } from './like.entity';
 
 @Injectable()
@@ -56,6 +56,7 @@ export class LikeService {
       var res = await this.neo4jService.write(
         `
                 MATCH (l:Like {hcpId: $hcpId})-[r:ASSIGNED_TO]->(c:Comment{id : $commentId})
+                SET c.number = c.number - 1
                 DETACH DELETE l
             `,
         { commentId, fullName, hcpId },
@@ -66,6 +67,8 @@ export class LikeService {
           CREATE (l:Like) SET l += $properties, l.id = randomUUID()
           WITH l
           MATCH (c:Comment) WHERE c.id = $commentId
+          SET c.number = c.number + 1
+
           CREATE (l)-[r:ASSIGNED_TO]->(c)
           RETURN (c)
       `,
@@ -128,5 +131,14 @@ export class LikeService {
       );
     }
     return res.records[0];
+  }
+  async getLikedById({ hcpId }: getLikedByIdDto) {
+    const res = await this.neo4jService.read(
+      `
+            MATCH (l:Like {hcpId: $hcpId})-[r:ASSIGNED_TO]->(c:Comment) RETURN c
+            `,
+      { hcpId },
+    );
+    return this.commentService.hydrate_mass(res);
   }
 }

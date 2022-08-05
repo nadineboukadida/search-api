@@ -45,7 +45,7 @@ export class CommentController {
     //todo format the comments
   }
 
-  @Delete('delete_comment')
+  @Post('delete_comment')
   @UseGuards(HcpGuard)
   async deleteCommentById(@Body() deleteCommentDto:DeleteCommentDto){
     await this.commentService.deleteCommentById(deleteCommentDto);

@@ -76,7 +76,7 @@ export class CommentService {
 
     const res = await this.neo4jService.write(
       `
-        CREATE (c:Comment) SET c += $properties, c.id = randomUUID()
+        CREATE (c:Comment) SET c += $properties, c.id = randomUUID(), c.number = 0
         WITH c
         MATCH (a:Study) WHERE a.id = "${studyId}"
         CREATE (c)-[r:COMMENT_TO]->(a)

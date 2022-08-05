@@ -3,7 +3,7 @@ import { GetCommentDto, GetStudyDto } from 'src/comment/dto/create-comment.dto';
 import { LikeCommentDto } from 'src/like/dto/like-comment.dto';
 import { HcpGuard } from 'src/guard/is-hcp.guard';
 import { LikeService } from './like.service';
-import { LikeStudyDto } from './dto/like-study.dto';
+import { getLikedByIdDto, LikeStudyDto } from './dto/like-study.dto';
 
 @Controller()
 export class LikeController {
@@ -31,5 +31,11 @@ export class LikeController {
   async likestudy(@Body() likestudytDto: LikeStudyDto) {
     const study = await this.likeService.likestudy(likestudytDto);
     return { message: 'success', result: study };
+  }
+
+  @Post('liked_comments')
+  async likedById(@Body() likedByIdDto: getLikedByIdDto) {
+    const comments = await this.likeService.getLikedById(likedByIdDto);
+    return { message: 'success', result: comments };
   }
 }
