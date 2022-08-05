@@ -7,6 +7,7 @@ export class CreateCommentDto {
     hcpId: string;
     @IsString()
     content: string;
+    fullName?:string;
 }
 
 export class GetCommentDto {

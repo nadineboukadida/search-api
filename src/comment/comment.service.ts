@@ -68,7 +68,7 @@ export class CommentService {
     databaseOrTransaction: string | Transaction,
     commentDto: CreateCommentDto,
   ): Promise<Comment> {
-    const { studyId, hcpId, content } = commentDto;
+    const { studyId, hcpId, content, fullName } = commentDto;
     const study = await this.getStudy(studyId);
     if (!study.records[0]) {
       throw new BadRequestException('this study ID does not exist');
@@ -85,7 +85,8 @@ export class CommentService {
       {
         properties: {
           content,
-          hcpId
+          hcpId,
+          fullName
         },
       },
       databaseOrTransaction,

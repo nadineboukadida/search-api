@@ -27,7 +27,7 @@ export class LikeService {
     }
     const res = await this.neo4jService.read(
       `
-            MATCH (l:Like)-[r:ASSIGNED_TO]->(c:comment{id : $commentId}) RETURN l
+            MATCH (l:Like)-[r:ASSIGNED_TO]->(c:Comment{id : $commentId}) RETURN l
             `,
       { commentId },
     );
