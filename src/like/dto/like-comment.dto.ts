@@ -1,7 +1,7 @@
 import { IsString } from "class-validator";
 
 export class LikeCommentDto {
-    hcpId: string;
+    hcpId: number;
     commentId:string;
     token?:string;
     fullName?:string;

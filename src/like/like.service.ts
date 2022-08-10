@@ -56,7 +56,7 @@ export class LikeService {
       var res = await this.neo4jService.write(
         `
                 MATCH (l:Like {hcpId: $hcpId})-[r:ASSIGNED_TO]->(c:Comment{id : $commentId})
-                SET c.number = c.number - 1
+                SET c.likeNumber = c.likeNumber - 1
                 DETACH DELETE l
             `,
         { commentId, fullName, hcpId },
@@ -67,7 +67,7 @@ export class LikeService {
           CREATE (l:Like) SET l += $properties, l.id = randomUUID()
           WITH l
           MATCH (c:Comment) WHERE c.id = $commentId
-          SET c.number = c.number + 1
+          SET c.likeNumber = c.likeNumber + 1
 
           CREATE (l)-[r:ASSIGNED_TO]->(c)
           RETURN (c)

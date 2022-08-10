@@ -4,5 +4,5 @@ export class DeleteCommentDto {
     @IsString()
     commentId: string;
     fullName?: string;
-    hcpId?: string;
+    hcpId?: number;
 }

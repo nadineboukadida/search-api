@@ -15,7 +15,7 @@ import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { DeleteCommentDto } from './dto/delete-comment.dto';
 import { LikeCommentDto } from '../like/dto/like-comment.dto';
-import { SearchCommentDto } from './dto/search_comment.dto';
+import { SearchCommentDto, SearchReplyDto } from './dto/search_comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller()
@@ -27,10 +27,8 @@ export class CommentController {
   @Post('add_comment')
   @UseGuards(HcpGuard)
   async addComment(@Body() commentDto: CreateCommentDto, @Request() req) {
-    const transaction: Transaction = req.transaction;
 
     const comment = await this.commentService.createComment(
-      transaction,
       commentDto,
     );
     return {message: "success" , result: comment.toJson()}
@@ -42,7 +40,6 @@ export class CommentController {
         searchCommentDto,
     );
     return {message: "success" , result: comments}
-    //todo format the comments
   }
 
   @Post('delete_comment')
@@ -59,6 +56,23 @@ export class CommentController {
     return {message: "success" , result: comment.toJson()}
   }
 
+  @UseInterceptors(Neo4jTransactionInterceptor)
+  @Post('add_reply')
+  @UseGuards(HcpGuard)
+  async addReply(@Body() commentDto: CreateCommentDto, @Request() req) {
 
+    const comment = await this.commentService.createReply(
+      commentDto
+    );
+    return {message: "success" , result: comment.toJson()}
+  }
+
+  @Post('get_reply')
+  async getAllRepliesByCommentId(@Body() SearchReplyDto: SearchReplyDto) {
+    const replies = await this.commentService.getRepliesByCommentId(
+        SearchReplyDto
+    );
+    return {message: "success" , result: replies}
+  }
 
 }
